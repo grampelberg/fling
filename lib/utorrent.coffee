@@ -11,7 +11,7 @@ class Server
     winston.info "#{type}: \n\n#{data}"
 
   start: ->
-    dir = "#{__dirname}/../../utserver/"
+    dir = "#{__dirname}/../utorrent/"
     @utorrent_proc = proc.spawn "#{dir}utserver", [],
       cwd: dir
     winston.info "utorrent running at: #{@utorrent_proc.pid}"
