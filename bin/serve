@@ -1,0 +1,46 @@
+#!/usr/bin/env coffee
+##
+# serve [options]
+#
+# Launch the listener
+#
+
+nconf = require 'nconf'
+winston = require 'winston'
+
+serve = require '../lib/serve'
+utorrent = require '../lib/utorrent'
+
+nconf.argv().env()
+
+nconf.defaults
+  NODE_ENV: 'development'
+  config: "config/config.json"
+
+nconf.file
+  file: nconf.get 'config'
+
+# Setup logging
+winston.remove winston.transports.Console
+winston.add winston.transports.Console,
+  colorize: true,
+  timestamp: true,
+  handleExceptions: true
+  level: nconf.get 'log_level'
+
+winston.setLevels
+  debug: 0
+  info: 1
+  notice: 2
+  warn: 3
+  error: 4
+  crit: 5
+  alert: 6
+  emerg: 7
+
+winston.config.syslog.levels
+
+ut = new utorrent.Server
+ut.start()
+http = new serve.Server
+http.start()

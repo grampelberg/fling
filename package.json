@@ -1,0 +1,16 @@
+{
+    "engine": "node >= 0.6.x",
+    "name": "fling",
+    "author": "Thomas Rampelberg <thomas@saunter.org>",
+    "dependencies": {
+        "coffee-script": "*",
+        "winston": "*",
+        "express": "2.5.5",
+        "request": "*",
+        "nconf": "*",
+        "underscore": "*",
+        "ejs": "*"
+    },
+    "version": "0.0.1",
+    "description": "Universal uploader"
+}
