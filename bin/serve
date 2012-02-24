@@ -42,5 +42,5 @@ winston.config.syslog.levels
 
 ut = new utorrent.Server
 ut.start()
-http = new serve.Server
+http = new serve.Server(ut)
 http.start()
