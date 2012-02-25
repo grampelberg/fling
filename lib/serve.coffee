@@ -32,6 +32,7 @@ class Server
   routes: ->
     @app.get '/debug/peers/:hash', @_peer
     @app.get '/debug/torrents', @_torrents
+    @app.get '/debug/upload', @_upload
     @app.get '/add', @_add
     @app.get '/upload/:hash', @_status
 
@@ -42,6 +43,11 @@ class Server
   _peer: (req, res) =>
     @utorrent.peers req.params.hash, (body) =>
       res.json body
+
+  _upload: (req, res) =>
+    opts =
+      layout: false
+    res.render 'upload_test.ejs', opts
 
   _add: (req, res) =>
     @utorrent.add_torrent req.query.link, =>
