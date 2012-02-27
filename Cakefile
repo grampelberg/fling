@@ -3,6 +3,7 @@
 fs        = require 'fs'
 proc      = require 'child_process'
 request   = require 'request'
+winston   = require 'winston'
 
 tarball = "http://com.bittorrent.dropbox.s3-website-us-east-1.amazonaws.com/" +
   "utorrent-server.tar.gz"
@@ -26,6 +27,14 @@ fetch_webui = ->
   request.get(webui).pipe(
     fs.createWriteStream("#{__dirname}/utorrent/webui.zip"))
 
+compile_templates = ->
+  proc.exec "handlebars -m -f public/assets/templates.min.js views",
+    (error, stdout, stderr) =>
+      winston.info error or "templates compiled"
+
 task 'setup', 'Get setup for running', (options) ->
   extract_utorrent ->
     fetch_webui()
+
+task 'compile', 'Compile everything', (options) ->
+  compile_templates()

@@ -5,8 +5,9 @@
 # Launch the listener
 #
 
-nconf = require 'nconf'
-winston = require 'winston'
+proc      = require 'child_process'
+nconf     = require 'nconf'
+winston   = require 'winston'
 
 serve = require '../lib/serve'
 utorrent = require '../lib/utorrent'
@@ -40,6 +41,12 @@ winston.setLevels
 
 winston.config.syslog.levels
 
+if nconf.get 'compile'
+  proc.exec "cake compile", 
+    cwd: "#{__dirname}/.."
+  , (error, stdout, sterr) =>
+    winston.info error or "templates compiled" 
+  
 ut = new utorrent.Server
 ut.start()
 http = new serve.Server(ut)
