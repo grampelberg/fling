@@ -66,11 +66,11 @@ window.BtappBase = {
 		//we want to call clearState on all child elements
 		this.attributes && _.each(this.attributes, function(attribute) { attribute.clearState && attribute.clearState(); });
 		this.each && this.each(function(model) { model.clearState(); });
-
+	
 		//once child elements have been cleared, just blow away our children elements
 		this.reset && this.reset();
 		this.clear && this.clear();
-
+		
 		this.destructor();
 		this.initializeValues();
 	}
@@ -88,7 +88,7 @@ window.BtappCollection = Backbone.Collection.extend(BtappBase).extend({
 		Backbone.Collection.prototype.initialize.apply(this, arguments);
 		BtappBase.initialize.apply(this, arguments);
 		_.bindAll(this, 'destructor', 'customAddEvent', 'customRemoveEvent', 'customChangeEvent');
-
+		
 		this.bind('add', this.customAddEvent);
 		this.bind('remove', this.customRemoveEvent)
 		this.bind('change', this.customChangeEvent);
@@ -224,7 +224,7 @@ window.BtappModel = Backbone.Model.extend(BtappBase).extend({
 		Backbone.Model.prototype.initialize.apply(this, arguments);
 		BtappBase.initialize.apply(this, arguments);
 		_.bindAll(this, 'destructor', 'customEvents');
-
+		
 		this.bind('change', this.customEvents);
 	},
 	destructor: function() {
@@ -237,10 +237,10 @@ window.BtappModel = Backbone.Model.extend(BtappBase).extend({
 			//check if this is a value that has been unset
 			if(value === undefined) {
 				var prev = this.previous(key);
-				this.trigger('remove', key, prev);
+				this.trigger('remove', prev);
 				this.trigger('remove:' + key, prev);
 			} else if(this.previous(key) === undefined) {
-				this.trigger('add', key, value);
+				this.trigger('add', value);
 				this.trigger('add:' + key, value);
 			}
 		}, this));
@@ -261,7 +261,8 @@ window.BtappModel = Backbone.Model.extend(BtappBase).extend({
 		delete this.bt[v];
 	},
 	updateRemoveAttributeState: function(v, removed, attributes) {
-		//assert(this.get(v) === unescape(removed), 'trying to remove an attribute, but did not provide the correct previous value');
+		removed = typeof removed === 'string' ? unescape(removed) : removed;
+		assert(this.get(v) === removed, 'trying to remove an attribute, but did not provide the correct previous value');
 		attributes[v] = this.get(v);
 	},
 	updateRemoveState: function(session, add, remove, url) {
@@ -314,9 +315,7 @@ window.BtappModel = Backbone.Model.extend(BtappBase).extend({
 	},
 	updateAddAttributeState: function(session, added, removed, childurl, v, attributes) {
 		// Set non function/object variables as model attributes
-		if(typeof added === 'string') {
-			added = unescape(added);
-		}
+		added = (typeof added === 'string') ? unescape(added) : added;
 		assert(!(this.get(escape(v)) === added), 'trying to set a variable to the existing value [' + childurl + ' -> ' + JSON.stringify(added) + ']');
 		if(!(removed === undefined)) {
 			assert(this.get(escape(v)) === removed, 'trying to update an attribute, but did not provide the correct previous value');
@@ -343,7 +342,7 @@ window.BtappModel = Backbone.Model.extend(BtappBase).extend({
 				this.updateAddFunctionState(session, added, url, v);
 			} else {
 				this.updateAddAttributeState(session, added, removed, childurl, v, attributes);
-			}
+			}	
 		}
 		this.set(attributes);
 	}
@@ -417,7 +416,7 @@ window.Btapp = BtappModel.extend({
 		// it would be nice to be able to listen in on what's going on...so lets just bubble
 		// them up as client:XXX messages
 		this.client.bind('all', this.trigger, this);
-		this.client.bind('client:connected', this.fetch);
+		this.client.bind('client:connected', this.fetch);		
 	},
 	disconnect: function() {
 		assert(this.client, 'trying to disconnect from an undefined client');
