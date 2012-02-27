@@ -6,6 +6,8 @@ winston   = require 'winston'
 
 class Server
 
+  _outstanding: {}
+
   constructor: (utorrent) ->
     @utorrent = utorrent
     @app = express.createServer()
@@ -33,8 +35,8 @@ class Server
     @app.get '/debug/peers/:hash', @_peer
     @app.get '/debug/torrents', @_torrents
     @app.get '/debug/upload', @_upload
-    @app.get '/add', @_add
-    @app.get '/upload/:hash', @_status
+    @app.get '/add/:hash', @_add
+    @app.get '/status/:hash', @_status
 
   _torrents: (req, res) =>
     @utorrent.torrents (body) ->
@@ -50,10 +52,11 @@ class Server
     res.render 'upload_test.ejs', opts
 
   _add: (req, res) =>
-    @utorrent.add_torrent req.query.link, =>
-      @utorrent.torrents (body) =>
-        res.json
-          server: "http://localhost:8889"
+    link = "magnet:?xt=urn:btih:#{req.params.hash}"
+    @utorrent.add_torrent link, =>
+      @_outstanding[req.params.hash] = req.query.announce
+      res.json
+        server: "http://localhost:8889"
 
   _status: (req, res) =>
     @utorrent.torrents (torrents) =>

@@ -28,7 +28,7 @@ class UploadView extends BaseView
 
   connect: (hash, server, callback) =>
     $.get "#{fling.config.host}/status/#{hash}", (resp) =>
-      if resp.connected
+      if not resp.connected
         return callback()
       # btapp.bt.add_peer(hash, resp.server)
       _.delay =>
@@ -41,8 +41,14 @@ class UploadView extends BaseView
       $("body").append connected.render().el
 
     _add = (hash) =>
-      $.get "#{fling.config.host}/add/#{hash}", (resp) =>
-        @connect hash, resp.server, _notifiy
+      @$(".progress").show()
+      @$(".btn-primary").hide()
+      $.ajax
+        url: "#{fling.config.host}/add/#{hash}"
+        data:
+          announce: fling.config.announce
+        success: (resp) =>
+          @connect hash, resp.server, _notify
 
     @get_files _add
 
