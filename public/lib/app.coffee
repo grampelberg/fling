@@ -2,8 +2,8 @@
 
 fling =
   config:
-    host: "http://localhost:9050"
-    announce: "http://localhost:9050/announce"
+    host: "http://10.10.100.194:9050"
+    announce: "http://10.10.100.194:9050/announce"
 
 Btapp.VERSION = "3.1"
 window.btapp = new Btapp
@@ -17,6 +17,25 @@ class BaseView extends Backbone.View
     $(@el).html Handlebars.templates[@template](@options)
     @
 
+class ProgressView extends BaseView
+  template: "progress"
+
+  initialize: (model) =>
+    @model = model
+    model.bind 'change:ratio', @_progress
+
+  _progress: =>
+    @$(".bar").attr "style", "width: #{@model.get('ratio') / 10}%"
+
+    if @model.get('ratio') != 1000
+      return
+    $("#fling_upload").show()
+    $(@el).hide()
+    $("body").append (new CompleteView()).render().el
+
+class CompleteView extends BaseView
+  template: "complete"
+
 class UploadView extends BaseView
   template: "upload"
   events:
@@ -24,13 +43,19 @@ class UploadView extends BaseView
   _retry_interval: 1000
 
   get_files: (callback) =>
-    callback("6A50D50EF407735AA748272585353BD1B11D6452")
+    btapp.bt.browseforfiles ->
+      ""
+    , (files) ->
+      btapp.bt.create ->
+        ""
+      , "", _.values(files), (hash) ->
+        callback(hash)
 
   connect: (hash, server, callback) =>
     $.get "#{fling.config.host}/status/#{hash}", (resp) =>
-      if not resp.connected
+      if resp.connected
         return callback()
-      # btapp.bt.add_peer(hash, resp.server)
+      # btapp.get("torrent").get(hash).bt.add_peer _.identity, server
       _.delay =>
         @connect hash, server, callback
       , @_retry_interval
@@ -41,12 +66,19 @@ class UploadView extends BaseView
       $("body").append connected.render().el
 
     _add = (hash) =>
-      @$(".progress").show()
-      @$(".btn-primary").hide()
+      _.delay =>
+        torrent_view = new ProgressView(
+          btapp.get('torrent').get(hash).get('properties')
+        )
+        $("body").append torrent_view.render().el
+      , 100
+
+      @$("#fling_upload").hide()
+      announce = $(".announce").val()
       $.ajax
         url: "#{fling.config.host}/add/#{hash}"
         data:
-          announce: fling.config.announce
+          announce: announce or fling.config.announce
         success: (resp) =>
           @connect hash, resp.server, _notify
 
@@ -56,18 +88,13 @@ class ConnectedView extends BaseView
   template: "connected"
 
 jQuery ->
+
+btapp.bind 'client:connected', ->
+  $(".client_download").hide()
   uploader = new UploadView
   $("body").append uploader.render().el
 
-# btapp.bind 'client:connected', ->
-#   _.delay ->
-#     btapp.bt.browseforfiles ->
-#       ""
-#     , (files) ->
-#       btapp.bt.create ->
-#         console.log "one", arguments
-#       , '', files, ->
-#         console.log "two", arguments
-#   , 1000
+btapp.bind 'plugin:install_plugin', (opts) =>
+  opts.install = false
 
-# btapp.connect()
+btapp.connect()

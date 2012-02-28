@@ -1,12 +1,13 @@
 # Copyright(c) 2012 Thomas Rampelberg <thomas@saunter.org>
 
-express   = require   'express'
+express   = require 'express'
 nconf     = require 'nconf'
+request   = require 'request'
 winston   = require 'winston'
 
 class Server
 
-  _outstanding: {}
+  _outstanding: { }
 
   constructor: (utorrent) ->
     @utorrent = utorrent
@@ -23,6 +24,7 @@ class Server
       @app.use express.bodyParser()
       @app.use express.cookieParser()
       @app.use express.static "#{__dirname}/../public"
+      @app.use express.static "#{__dirname}/../utorrent"
       @app.set "views", "#{__dirname}/../views"
       @app.enable "jsonp callback"
     @routes()
@@ -30,13 +32,42 @@ class Server
   start: ->
     @app.listen nconf.get('port')
     winston.info 'server listening on:', nconf.get 'port'
+    @check_interval = setInterval @check, 1000
+
+  check: =>
+    report = (announce, hash) =>
+      @utorrent.files hash, (flist) =>
+        console.log (
+            "http://10.10.100.194:9050/download/#{x.get('name')}" \
+              for x in flist)
+        request.post
+          url: announce
+          body: JSON.stringify (
+            "http://10.10.100.194:9050/#{x.get('name')}" \
+              for x in flist)
+        , (error, body, resp) =>
+          winston.info error or "reported #{hash} to #{announce}"
+
+    @utorrent.torrents (torrents) =>
+      for k,v of @_outstanding
+        if torrents[k].get('progress') < 1000
+          return
+
+        delete @_outstanding[k]
+        report v, k
 
   routes: ->
     @app.get '/debug/peers/:hash', @_peer
     @app.get '/debug/torrents', @_torrents
+    @app.get '/debug/files/:hash', @_files
     @app.get '/debug/upload', @_upload
     @app.get '/add/:hash', @_add
     @app.get '/status/:hash', @_status
+    @app.get '/download/:fname', @_download
+    @app.post '/announce', @_announce
+
+  _announce: (req, res) =>
+    res.json ""
 
   _torrents: (req, res) =>
     @utorrent.torrents (body) ->
@@ -56,7 +87,7 @@ class Server
     @utorrent.add_torrent link, =>
       @_outstanding[req.params.hash] = req.query.announce
       res.json
-        server: "http://localhost:8889"
+        server: "10.10.100.194:8889"
 
   _status: (req, res) =>
     @utorrent.torrents (torrents) =>
@@ -66,6 +97,13 @@ class Server
           progress: torrent.get 'progress'
           connected: (x for x in peers \
             when x.get('ip') == req.connection.remoteAddress).length != 0
+
+  _files: (req, res) =>
+    @utorrent.files req.params.hash, (files) =>
+      res.json files
+
+  _download: (req, res) =>
+    winston.info req.params.fname
 
 module.exports =
   Server: Server

@@ -61,6 +61,16 @@ class Server
       callback _.map body.peers[1], (v) ->
         new Peer(v)
 
+  files: (hash, callback) ->
+    @request
+      action: 'getfiles'
+      hash: hash
+    , (body) ->
+      if not body.files.length
+        return callback([])
+      callback _.map body.files[1], (v) ->
+        new File(v)
+
 class BaseType
 
   constructor: (item) ->
@@ -92,6 +102,10 @@ class Peer extends BaseType
             "requests", "waited", "uploaded", "downloaded", "hasherr",
             "peer_download_rate", "maxup", "maxdown", "queued",
             "inactive", "relevance" ]
+
+class File extends BaseType
+
+  _names: [ "name" ]
 
 module.exports =
   Server: Server
