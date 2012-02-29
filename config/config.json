@@ -1,4 +1,6 @@
 {
   "port": 9050,
-  "log_level": "debug"
+  "log_level": "debug",
+  "ip": "10.10.100.194",
+  "server_port": 8889
 }

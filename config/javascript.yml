@@ -1,0 +1,14 @@
+javascripts:
+  uploader:
+    - public/vendor/jquery.js
+    - public/vendor/underscore.js
+    - public/vendor/backbone.js
+    - public/vendor/handlebars.js
+    - public/vendor/less.min.js
+    - public/assets/templates.min.js
+    - public/vendor/pairing.btapp.js
+    - public/vendor/plugin.btapp.js
+    - public/vendor/torque.btapp.js
+    - public/vendor/btapp.js
+
+compress_assets: off

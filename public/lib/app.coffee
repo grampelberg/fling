@@ -1,8 +1,7 @@
 # Copyright(c) 2012 Thomas Rampelberg <thomas@saunter.org>
 
-fling =
+window.fling =
   config:
-    host: "http://10.10.100.194:9050"
     announce: "http://10.10.100.194:9050/announce"
 
 Btapp.VERSION = "3.1"
@@ -31,7 +30,7 @@ class ProgressView extends BaseView
       return
     $("#fling_upload").show()
     $(@el).hide()
-    $("body").append (new CompleteView()).render().el
+    $("#fling_body").append (new CompleteView()).render().el
 
 class CompleteView extends BaseView
   template: "complete"
@@ -63,22 +62,21 @@ class UploadView extends BaseView
   start: =>
     _notify = =>
       connected = new ConnectedView
-      $("body").append connected.render().el
+      $("#fling_body").append connected.render().el
 
     _add = (hash) =>
       _.delay =>
         torrent_view = new ProgressView(
           btapp.get('torrent').get(hash).get('properties')
         )
-        $("body").append torrent_view.render().el
+        $("#fling_body").append torrent_view.render().el
       , 100
 
       @$("#fling_upload").hide()
-      announce = $(".announce").val()
       $.ajax
         url: "/add/#{hash}"
         data:
-          announce: announce or fling.config.announce
+          announce: fling.config.announce
         success: (resp) =>
           @connect hash, resp.server, _notify
 
@@ -87,14 +85,35 @@ class UploadView extends BaseView
 class ConnectedView extends BaseView
   template: "connected"
 
+class InstallView extends BaseView
+  template: "install"
+
+class InitialView extends BaseView
+  template: "loader"
+  className: "hero-unit"
+
+  initialize: ->
+    @_plugin()
+
+  _plugin: =>
+    connected = false
+    btapp.bind 'client:connected', =>
+      connected = true
+      @$("#fling_body").html (new UploadView()).render().el
+
+    _.delay =>
+      if connected
+        return
+      @$("#fling_body").html (new InstallView()).render().el
+    , 2500
+
+    btapp.bind 'plugin:install_plugin', (opts) =>
+      opts.install = false
+
+    btapp.connect()
+
 jQuery ->
+  $("#fling_uploader").append (new InitialView()).render().el
 
-btapp.bind 'client:connected', ->
-  $(".client_download").hide()
-  uploader = new UploadView
-  $("body").append uploader.render().el
 
-btapp.bind 'plugin:install_plugin', (opts) =>
-  opts.install = false
 
-btapp.connect()

@@ -38,12 +38,12 @@ class Server
     report = (announce, hash) =>
       @utorrent.files hash, (flist) =>
         console.log (
-            "http://23.20.114.31:9050/#{x.get('name')}" \
+            "http://#{nconf.get('ip')}:#{nconf.get('port')}/#{x.get('name')}" \
               for x in flist)
         request.post
           url: announce
           body: JSON.stringify (
-            "http://23.20.114.31:9050/#{x.get('name')}" \
+            "http://#{nconf.get('ip')}:#{nconf.get('port')}/#{x.get('name')}" \
               for x in flist)
         , (error, body, resp) =>
           winston.info error or "reported #{hash} to #{announce}"
@@ -61,6 +61,7 @@ class Server
     @app.get '/debug/torrents', @_torrents
     @app.get '/debug/files/:hash', @_files
     @app.get '/debug/upload', @_upload
+    @app.get '/debug/include', @_include
     @app.get '/add/:hash', @_add
     @app.get '/status/:hash', @_status
     @app.get '/download/:fname', @_download
@@ -87,7 +88,7 @@ class Server
     @utorrent.add_torrent link, =>
       @_outstanding[req.params.hash] = req.query.announce
       res.json
-        server: "23.20.114.31:8889"
+        server: "#{nconf.get('ip')}:#{nconf.get('server_port')}"
 
   _status: (req, res) =>
     @utorrent.torrents (torrents) =>
@@ -104,6 +105,11 @@ class Server
 
   _download: (req, res) =>
     winston.info req.params.fname
+
+  _include: (req, res) =>
+    opts =
+      layout: false
+    res.render 'include.ejs', opts
 
 module.exports =
   Server: Server
