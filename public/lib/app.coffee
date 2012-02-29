@@ -76,7 +76,7 @@ class UploadView extends BaseView
       @$("#fling_upload").hide()
       announce = $(".announce").val()
       $.ajax
-        url: "#{fling.config.host}/add/#{hash}"
+        url: "/add/#{hash}"
         data:
           announce: announce or fling.config.announce
         success: (resp) =>
