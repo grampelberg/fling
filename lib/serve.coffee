@@ -87,7 +87,7 @@ class Server
     @utorrent.add_torrent link, =>
       @_outstanding[req.params.hash] = req.query.announce
       res.json
-        server: "10.10.100.194:8889"
+        server: "23.20.114.31:8889"
 
   _status: (req, res) =>
     @utorrent.torrents (torrents) =>
