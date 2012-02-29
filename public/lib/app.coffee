@@ -2,6 +2,7 @@
 
 window.fling =
   config:
+    server: "http://10.10.100.194:9050"
     announce: "http://10.10.100.194:9050/announce"
 
 Btapp.VERSION = "3.1"
@@ -51,13 +52,17 @@ class UploadView extends BaseView
         callback(hash)
 
   connect: (hash, server, callback) =>
-    $.get "/status/#{hash}", (resp) =>
-      if resp.connected
-        return callback()
-      btapp.get("torrent").get(hash).bt.add_peer _.identity, server
-      _.delay =>
-        @connect hash, server, callback
-      , @_retry_interval
+    $.ajax
+      url: "#{fling.config.server}/status/#{hash}"
+      dataType: "jsonp"
+      success: (resp) =>
+        if resp.connected
+          return callback()
+        console.log _.identity, server
+        btapp.get("torrent").get(hash).bt.add_peer _.identity, server
+        _.delay =>
+          @connect hash, server, callback
+        , @_retry_interval
 
   start: =>
     _notify = =>
@@ -74,7 +79,8 @@ class UploadView extends BaseView
 
       @$("#fling_upload").hide()
       $.ajax
-        url: "/add/#{hash}"
+        url: "#{fling.config.server}/add/#{hash}"
+        dataType: "jsonp"
         data:
           announce: fling.config.announce
         success: (resp) =>
