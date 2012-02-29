@@ -10,5 +10,6 @@ javascripts:
     - public/vendor/plugin.btapp.js
     - public/vendor/torque.btapp.js
     - public/vendor/btapp.js
+    - public/build/app.js
 
 compress_assets: off
