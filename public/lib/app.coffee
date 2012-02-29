@@ -55,7 +55,7 @@ class UploadView extends BaseView
     $.get "/status/#{hash}", (resp) =>
       if resp.connected
         return callback()
-      # btapp.get("torrent").get(hash).bt.add_peer _.identity, server
+      btapp.get("torrent").get(hash).bt.add_peer _.identity, server
       _.delay =>
         @connect hash, server, callback
       , @_retry_interval
