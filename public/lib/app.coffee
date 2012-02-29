@@ -52,7 +52,7 @@ class UploadView extends BaseView
         callback(hash)
 
   connect: (hash, server, callback) =>
-    $.get "#{fling.config.host}/status/#{hash}", (resp) =>
+    $.get "/status/#{hash}", (resp) =>
       if resp.connected
         return callback()
       # btapp.get("torrent").get(hash).bt.add_peer _.identity, server
