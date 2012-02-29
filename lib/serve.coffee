@@ -38,12 +38,12 @@ class Server
     report = (announce, hash) =>
       @utorrent.files hash, (flist) =>
         console.log (
-            "http://10.10.100.194:9050/download/#{x.get('name')}" \
+            "http://23.20.114.31:9050/#{x.get('name')}" \
               for x in flist)
         request.post
           url: announce
           body: JSON.stringify (
-            "http://10.10.100.194:9050/#{x.get('name')}" \
+            "http://23.20.114.31:9050/#{x.get('name')}" \
               for x in flist)
         , (error, body, resp) =>
           winston.info error or "reported #{hash} to #{announce}"
