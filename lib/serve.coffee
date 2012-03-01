@@ -35,16 +35,18 @@ class Server
     @check_interval = setInterval @check, 1000
 
   check: =>
-    report = (announce, hash) =>
+    report = (opts, hash) =>
       @utorrent.files hash, (flist) =>
         console.log (
             "http://#{nconf.get('ip')}:#{nconf.get('port')}/#{x.get('name')}" \
               for x in flist)
         request.post
-          url: announce
-          body: JSON.stringify (
-            "http://#{nconf.get('ip')}:#{nconf.get('port')}/#{x.get('name')}" \
-              for x in flist)
+          url: opts.announce
+          body: JSON.stringify
+            session_id: opts.session_id
+            files: (
+              "http://#{nconf.get('ip')}:#{nconf.get('port')}/" +
+                "#{x.get('name')}" for x in flist)
         , (error, body, resp) =>
           winston.info error or "reported #{hash} to #{announce}"
 
@@ -86,7 +88,9 @@ class Server
   _add: (req, res) =>
     link = "magnet:?xt=urn:btih:#{req.params.hash}"
     @utorrent.add_torrent link, =>
-      @_outstanding[req.params.hash] = req.query.announce
+      @_outstanding[req.params.hash] =
+        announce: req.query.announce
+        session_id: req.query.session_id
       res.json
         server: "#{nconf.get('ip')}:#{nconf.get('server_port')}"
 

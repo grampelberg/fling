@@ -16,6 +16,7 @@ Put this in your page's HTML where you'd like it to show up.
 
     <script type="text/javascript">
       fling.config.announce = "http://localhost:9050/announce"
+      fling.config.session_id = "identify_this_user_uploads"
     </script>
 
 When an upload is complete, you'll be notified of it at the url you set
